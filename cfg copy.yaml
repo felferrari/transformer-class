@@ -1,0 +1,1059 @@
+general_params:
+  train_year: &train_year 2020
+  test_year: &test_year 2021
+  patch_size: &patch_size 224 #224
+  prefixs: &prefixs
+    opt: opt
+    sar: sar
+    previous: previous
+    label: label
+    prediction: pred
+    cloud: cloud
+  #experiments_cfg_path: &experiments_cfg_path experiments
+  experiments_folders: &experiment_folders
+    models: models
+    logs: logs
+    predicted: predicted
+    visual: visual
+    results: results
+    visual_logs: visual_logs
+  opt_bands: &opt_bands 10 #number of bands per optical image
+  sar_bands: &sar_bands 2 #number of bands per SAR image
+  n_classes: &n_classes 3 #number of classes
+  n_models: &n_models 5 #number of models to be trained for each experiment
+  resunet_depths: &resunet_depths [32, 64, 128, 256]
+  label_def_inner_buffer: 3
+  label_def_outer_buffer: 3
+  swin_params: &swin_params
+    img_size: *patch_size
+    base_dim: 96
+    window_size: [4, 4]
+    shift_size: [2, 2]
+    patch_size: [4, 4]
+    n_heads: [3, 6, 12, 24]
+    n_blocks: [2, 2, 2, 2]
+preparation_params:
+  train_folder: train
+  validation_folder: validation
+  test_folder: test
+  prepared_data: prepared.yaml
+  statistics_data: statistics.yaml
+  patch_overlap: 0.7
+  min_def_proportion: 0.02
+paths:
+  opt_data: /home/felferrari/projects/thesis/data/opt
+  sar_data: /home/felferrari/projects/thesis/data/sar
+  prodes_data: /home/felferrari/projects/thesis/data/prodes
+  tiles_path: /home/felferrari/projects/thesis/data/general/tiles.tif
+  experiments: /home/felferrari/projects/thesis/experiments
+  label_train: /home/felferrari/projects/thesis/data/general/label_train.tif
+  label_test: /home/felferrari/projects/thesis/data/general/label_test.tif
+  previous_train: /home/felferrari/projects/thesis/data/general/previous_train.tif
+  previous_test: /home/felferrari/projects/thesis/data/general/previous_test.tif
+  prepared_data: /home/felferrari/projects/thesis/prepared
+  results_sqlite: /home/felferrari/projects/thesis/experiments/results.db
+prodes_params:
+  defor_2007: accumulated_deforestation_2007.shp
+  hydrography: hydrography.shp
+  no_forest: no_forest.shp
+  residual: residual.shp
+  yearly_deforestation: yearly_deforestation.shp
+# preparation_params:
+#   train_folder: train
+#   validation_folder: validation
+#   test_folder: test
+#   prepared_data: prepared.yaml
+#   statistics_data: statistics.yaml
+#   patch_size: *patch_size
+#   opt_bands: *opt_bands 
+#   sar_bands: *sar_bands 
+#   patch_overlap: 0.7
+#   min_def_proportion: 0.02
+#   prefixs: *prefixs
+training_params:
+  n_models: *n_models
+  #experiments_cfg_path: *experiments_cfg_path
+  experiment_folders: *experiment_folders
+  patch_size: *patch_size
+  batch_size: 32
+  opt_bands: *opt_bands 
+  sar_bands: *sar_bands 
+  max_train_batches: 200
+  max_val_batches: 100
+  min_val_loss: 200
+  loss_fn: 
+    #module: torch.nn.CrossEntropyLoss
+    module: segmentation_models_pytorch.losses.FocalLoss
+    params:
+      mode: multiclass
+      #ignore_index: 2
+      gamma: 3
+      #weight: [0.2, 0.8, 0]
+  optimizer:
+    module: torch.optim.AdamW
+    #module: torch.optim.Adam
+    params:
+      lr: 2.0e-5
+  early_stop:
+    patience: 10
+    min_delta: 1.0e-5
+  max_epochs: 500
+  n_classes: *n_classes
+prediction_params:
+  experiment_folders: *experiment_folders
+  patch_size: *patch_size
+  n_classes: *n_classes
+  prefixs: *prefixs
+  n_models: *n_models
+  batch_size: 48
+  prediction_remove_border: 8
+  prediction_overlaps: [0.2]#, 0.3, 0.4]
+  opt_bands: *opt_bands 
+  sar_bands: *sar_bands 
+
+experiments:
+  exp_X:
+    model: models.resunet.networks.ResUnetOpt # 
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    train_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    test_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    test_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    resunet_depths: *resunet_depths
+
+
+  exp_1:
+    model: models.resunet.networks.ResUnetOpt # 
+    description: CNN Opt (Diverse cloud)
+    sumary: Model Trained and tested with cloud-free optical images
+    short: Opt (Diverse cloud conditions)
+    group_model: CNN
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    train_sar_imgs: [ [0, 11] ]
+    test_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    test_sar_imgs: [ [0, 11] ]
+    resunet_depths: *resunet_depths
+
+  exp_2:
+    model: models.resunet.networks.ResUnetSAR # 
+    description: CNN SAR (12 Average images)
+    sumary: Model Trained and tested with 12 average SAR images
+    short: SAR (12 Avg Images)
+    group_model: CNN
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    train_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    test_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    test_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    resunet_depths: *resunet_depths
+
+  exp_3:
+    model: models.resunet.networks.ResUnetEF # 
+    description: CNN Early Fusion (Diverse cloud and 12 Avg SAR images)
+    sumary: Model Trained and tested with diverse cloud conditions in the optical images
+    short: Early Fusion
+    group_model: CNN
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    train_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    test_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    test_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    resunet_depths: *resunet_depths
+
+  exp_4:
+    model: models.resunet.networks.ResUnetJF # 
+    description: CNN Joint Fusion (Diverse cloud and 12 Avg SAR images)
+    sumary: Model Trained and tested with diverse cloud conditions in the optical images
+    short: Joint Fusion
+    group_model: CNN
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    train_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    test_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    test_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    resunet_depths: *resunet_depths
+
+  exp_5:
+    model: models.resunet.networks.ResUnetLF # 
+    description: CNN Late Fusion (Diverse cloud and 12 Avg SAR images)
+    sumary: Model Trained and tested with diverse cloud conditions in the optical images
+    short: Late Fusion
+    group_model: CNN
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    train_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    test_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    test_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    resunet_depths: *resunet_depths
+
+  exp_6:
+    model: models.resunet.networks.ResUnetOpt # 
+    description: CNN Opt (Cloud-free)
+    sumary: Model Trained and tested with cloud-free optical images
+    short: Opt (Cloud-free)
+    group_model: CNN
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3] ]
+    train_sar_imgs: [ [0, 11] ]
+    test_opt_imgs: [ [0, 3] ]
+    test_sar_imgs: [ [0, 11] ]
+    resunet_depths: *resunet_depths
+
+  exp_7:
+    model: models.resunet.networks.ResUnetJF # 
+    description: CNN pretrained Joint Fusion (Diverse cloud and 12 Avg SAR images)
+    sumary: Model Trained and tested with diverse cloud conditions in the optical images
+    short: Joint Fusion (pre-trained)
+    group_model: CNN
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    pretrained_encoders:
+      opt_exp: 1
+      sar_exp: 2
+    train_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    train_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    test_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    test_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    resunet_depths: *resunet_depths
+
+  exp_8:
+    model: models.resunet.networks.ResUnetLF # 
+    description: CNN pretrained Late Fusion (Diverse cloud and 12 Avg SAR images)
+    sumary: Model Trained and tested with diverse cloud conditions in the optical images
+    short: Late Fusion (pre-trained)
+    group_model: CNN
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    pretrained_encoders_decoders:
+      opt_exp: 1
+      sar_exp: 2
+    train_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    train_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    test_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    test_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    resunet_depths: *resunet_depths
+
+  exp_9:
+    model: models.resunet.networks.ResUnetOptMultiTask # 
+    description: CNN Multi-task Opt (Diverse cloud) 
+    sumary: Model Trained and tested with cloud-free optical images
+    short: Opt (Multi-task)
+    group_model: CNN
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    train_sar_imgs: [ [0, 11] ]
+    test_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    test_sar_imgs: [ [0, 11] ]
+    resunet_depths: *resunet_depths
+    override_train_params:
+      loss_fn_def: 
+        module: segmentation_models_pytorch.losses.FocalLoss
+        params:
+          mode: multiclass
+          gamma: 3
+      loss_fn_cloud:
+        weight: 1.0
+        module: torch.nn.MSELoss
+        params:
+          reduction: mean
+      optimizer:
+        module: torch.optim.AdamW
+        params:
+          lr: 2.0e-5
+
+  exp_10:
+    model: models.resunet.networks.ResUnetJF # 
+    description: CNN pretrained (Multi-task) Joint Fusion (Diverse cloud and 12 Avg SAR images)
+    sumary: Model Trained and tested with diverse cloud conditions in the optical images
+    short: Joint Fusion (pre-trained with Opt Multitask)
+    group_model: CNN
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    pretrained_encoders:
+      opt_exp: 9
+      sar_exp: 2
+    train_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    train_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    test_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    test_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    resunet_depths: *resunet_depths
+    
+
+  exp_21:
+    model: models.swin.networks.SwinUnetOpt # 
+    description: SWIN-Unet Optical (Diverse cloud)
+    sumary: Model Trained and tested with diverse cloud conditions in the optical images
+    short: Opt (Diverse cloud conditions)
+    group_model: SWIN-Unet
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    train_sar_imgs: [ [0, 11] ]
+    test_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    test_sar_imgs: [ [0, 11] ]
+    swin_params: *swin_params
+
+  exp_22:
+    model: models.swin.networks.SwinUnetSAR # 
+    description: SWIN-Unet SAR (12 Average images)
+    sumary: Model Trained and tested with 12 average SAR images
+    short: SAR (12 Avg Images)
+    group_model: SWIN-Unet
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    train_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    test_opt_imgs: [ [0, 3] , [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    test_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    swin_params: *swin_params
+
+  exp_23:
+    model: models.swin.networks.SwinUnetEF # 
+    description: SWIN-Unet Early Fusion (Diverse cloud and 12 Avg SAR images)
+    sumary: Model Trained and tested with diverse cloud conditions in the optical images
+    short: Early Fusion
+    group_model: SWIN-Unet
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    train_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    test_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    test_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    swin_params: *swin_params
+
+  exp_24:
+    model: models.swin.networks.SwinUnetJF # 
+    description: SWIN-Unet Joint Fusion (Diverse cloud and 12 Avg SAR images)
+    sumary: Model Trained and tested with diverse cloud conditions in the optical images
+    short: Joint Fusion
+    group_model: SWIN-Unet
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    train_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    test_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    test_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    swin_params: *swin_params
+
+  exp_25:
+    model: models.swin.networks.SwinUnetLF # 
+    description: SWIN-Unet Late Fusion (Diverse cloud and 12 Avg SAR images)
+    sumary: Model Trained and tested with diverse cloud conditions in the optical images
+    short: Late Fusion
+    group_model: SWIN-Unet
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    train_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    test_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    test_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    swin_params: *swin_params
+
+  exp_26:
+    model: models.swin.networks.SwinUnetOpt # 
+    description: SWIN-Unet Opt (Cloud-free)
+    sumary: Model Trained and tested with cloud-free optical images
+    short: Opt (Cloud-free)
+    group_model: SWIN-Unet
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3] ]
+    train_sar_imgs: [ [0, 11] ]
+    test_opt_imgs: [ [0, 3] ]
+    test_sar_imgs: [ [0, 11] ]
+    swin_params: *swin_params
+
+  exp_27:
+    model: models.swin.networks.SwinUnetJF # 
+    description: SWIN-Unet pretrained Joint Fusion (Diverse cloud and 12 Avg SAR images)
+    sumary: Model Trained and tested with diverse cloud conditions in the optical images
+    short: Joint Fusion (pre-trained)
+    group_model: SWIN-Unet
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    pretrained_encoders:
+      opt_exp: 21
+      sar_exp: 22
+    train_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    train_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    test_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    test_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    swin_params: *swin_params
+
+  exp_28:
+    model: models.swin.networks.SwinUnetLF # 
+    description: SWIN-Unet pretrained Late Fusion (Diverse cloud and 12 Avg SAR images)
+    sumary: Model Trained and tested with diverse cloud conditions in the optical images
+    short: Late Fusion (pre-trained)
+    group_model: SWIN-Unet
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    pretrained_encoders_decoders:
+      opt_exp: 21
+      sar_exp: 22
+    train_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    train_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    test_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    test_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    swin_params: *swin_params
+
+  exp_29:
+    model: models.swin.networks.SwinUnetOptMultiTask # 
+    description: SWIN-Unet Multi-task Opt (Diverse cloud) 
+    sumary: Model Trained and tested with cloud-free optical images
+    short: Opt (Multi-task)
+    group_model: SWIN-Unet
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    train_sar_imgs: [ [0, 11] ]
+    test_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    test_sar_imgs: [ [0, 11] ]
+    swin_params: *swin_params
+    override_train_params:
+      loss_fn_def: 
+        module: segmentation_models_pytorch.losses.FocalLoss
+        params:
+          mode: multiclass
+          gamma: 3
+      loss_fn_cloud:
+        weight: 1.0
+        module: torch.nn.MSELoss
+        params:
+          reduction: mean
+      optimizer:
+        module: torch.optim.AdamW
+        params:
+          lr: 2.0e-5
+
+  exp_30:
+    model: models.swin.networks.SwinUnetJF # 
+    description: SWIN-Unet pretrained (Multi-task) Joint Fusion (Diverse cloud and 12 Avg SAR images)
+    sumary: Model Trained and tested with diverse cloud conditions in the optical images
+    short: Joint Fusion (pre-trained with Opt Multitask)
+    group_model: SWIN-Unet
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    pretrained_encoders:
+      opt_exp: 29
+      sar_exp: 22
+    train_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    train_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    test_opt_imgs: [ [0, 3], [0, 4], [0, 5], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5] ]
+    test_sar_imgs: [ [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] ]
+    swin_params: *swin_params
+
+  exp_41:
+    model: models.resunet.networks.ResUnetOpt # 
+    description: CNN Opt (Cloud-free) [WBCE 0.2-0.8]
+    sumary: Model Trained and tested with cloud-free optical images
+    short: Opt (Cloud-free) [WBCE 0.2-0.8]
+    group_model: CNN
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3] ]
+    train_sar_imgs: [ [0, 11] ]
+    test_opt_imgs: [ [0, 3] ]
+    test_sar_imgs: [ [0, 11] ]
+    resunet_depths: *resunet_depths
+    override_train_params:
+      loss_fn: 
+        module: torch.nn.CrossEntropyLoss
+        params:
+          ignore_index: 2
+          weight: [0.2, 0.8, 0]
+
+  exp_42:
+    model: models.swin.networks.SwinUnetOpt # 
+    description: SWIN-Unet Opt (Cloud-free) [WBCE 0.2-0.8]
+    sumary: Model Trained and tested with cloud-free optical images
+    short: Opt (Cloud-free) [WBCE 0.2-0.8]
+    group_model: SWIN-Unet
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3] ]
+    train_sar_imgs: [ [0, 11] ]
+    test_opt_imgs: [ [0, 3] ]
+    test_sar_imgs: [ [0, 11] ]
+    swin_params: *swin_params
+    override_train_params:
+      loss_fn: 
+        module: torch.nn.CrossEntropyLoss
+        params:
+          ignore_index: 2
+          weight: [0.2, 0.8, 0]
+
+  exp_43:
+    model: models.resunet.networks.ResUnetOpt # 
+    description: CNN Opt (Cloud-free) [WBCE 0.1-0.9]
+    sumary: Model Trained and tested with cloud-free optical images
+    short: Opt (Cloud-free) [WBCE 0.1-0.9]
+    group_model: CNN
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3] ]
+    train_sar_imgs: [ [0, 11] ]
+    test_opt_imgs: [ [0, 3] ]
+    test_sar_imgs: [ [0, 11] ]
+    resunet_depths: *resunet_depths
+    override_train_params:
+      loss_fn: 
+        module: torch.nn.CrossEntropyLoss
+        params:
+          ignore_index: 2
+          weight: [0.1, 0.9, 0]
+
+  exp_44:
+    model: models.swin.networks.SwinUnetOpt # 
+    description: SWIN-Unet Opt (Cloud-free) [WBCE 0.1-0.9]
+    sumary: Model Trained and tested with cloud-free optical images
+    short: Opt (Cloud-free) [WBCE 0.1-0.9]
+    group_model: SWIN-Unet
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3] ]
+    train_sar_imgs: [ [0, 11] ]
+    test_opt_imgs: [ [0, 3] ]
+    test_sar_imgs: [ [0, 11] ]
+    swin_params: *swin_params
+    override_train_params:
+      loss_fn: 
+        module: torch.nn.CrossEntropyLoss
+        params:
+          ignore_index: 2
+          weight: [0.1, 0.9, 0]
+
+  exp_51:
+    model: models.resunet.networks.ResUnetSAR # 
+    description: CNN SAR (2 Average images)
+    sumary: Model Trained and tested with 2 average SAR images
+    short: SAR (2 Avg Images)
+    group_model: CNN
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3] ]
+    train_sar_imgs: [ [0, 11] ]
+    test_opt_imgs: [ [0, 3] ]
+    test_sar_imgs: [ [0, 11] ]
+    resunet_depths: *resunet_depths
+
+  exp_52:
+    model: models.swin.networks.SwinUnetSAR # 
+    description: SWIN-Unet SAR (2 Average images)
+    sumary: Model Trained and tested with 2 average SAR images
+    short: SAR (2 Avg Images)
+    group_model: SWIN-Unet
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3] ]
+    train_sar_imgs: [ [0, 11] ]
+    test_opt_imgs: [ [0, 3] ]
+    test_sar_imgs: [ [0, 11] ]
+    swin_params: *swin_params
+
+  exp_53:
+    model: models.resunet.networks.ResUnetSAR # 
+    description: CNN SAR (All Single images)
+    sumary: Model Trained and tested with All Single SAR images
+    short: SAR (All Single Images)
+    group_model: CNN
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3] ]
+    train_sar_imgs: [ [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43] ]
+    test_opt_imgs: [ [0, 3] ]
+    test_sar_imgs: [ [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43] ]
+    resunet_depths: *resunet_depths
+
+  exp_54:
+    model: models.swin.networks.SwinUnetSAR # 
+    description: SWIN-Unet SAR (All Single images)
+    sumary: Model Trained and tested with All Single SAR images
+    short: SAR (All Single Images)
+    group_model: SWIN-Unet
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3] ]
+    train_sar_imgs: [ [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43] ]
+    test_opt_imgs: [ [0, 3] ]
+    test_sar_imgs: [ [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43] ]
+    swin_params: *swin_params
+
+  exp_55:
+    model: models.resunet.networks.ResUnetSAR # 
+    description: CNN SAR (2 Single images)
+    sumary: Model Trained and tested with 2 Single SAR images
+    short: SAR (2 Single Images)
+    group_model: CNN
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3] ]
+    train_sar_imgs: [ [12, 43] ]
+    test_opt_imgs: [ [0, 3] ]
+    test_sar_imgs: [ [12, 43] ]
+    resunet_depths: *resunet_depths
+
+  exp_56:
+    model: models.swin.networks.SwinUnetSAR # 
+    description: SWIN-Unet SAR (2 Single images)
+    sumary: Model Trained and tested with 2 Single SAR images
+    short: SAR (2 Single Images)
+    group_model: SWIN-Unet
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3] ]
+    train_sar_imgs: [ [12, 43] ]
+    test_opt_imgs: [ [0, 3] ]
+    test_sar_imgs: [ [12, 43] ]
+    swin_params: *swin_params
+
+  exp_57:
+    model: models.resunet.networks.ResUnetSAR # 
+    description: CNN SAR (2 Single images) [WBCE 0.2-0.8]
+    sumary: Model Trained and tested with 2 Single SAR images [WBCE 0.2-0.8]
+    short: SAR (2 Single Images) [WBCE 0.2-0.8]
+    group_model: CNN
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3] ]
+    train_sar_imgs: [ [12, 43] ]
+    test_opt_imgs: [ [0, 3] ]
+    test_sar_imgs: [ [12, 43] ]
+    resunet_depths: *resunet_depths
+    override_train_params:
+      loss_fn: 
+        module: torch.nn.CrossEntropyLoss
+        params:
+          ignore_index: 2
+          weight: [0.2, 0.8, 0]
+
+  exp_58:
+    model: models.swin.networks.SwinUnetSAR # 
+    description: SWIN-Unet SAR (2 Single images) [WBCE 0.2-0.8]
+    sumary: Model Trained and tested with 2 Single SAR images [WBCE 0.2-0.8]
+    short: SAR (2 Single Images) [WBCE 0.2-0.8]
+    group_model: SWIN-Unet
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3] ]
+    train_sar_imgs: [ [12, 43] ]
+    test_opt_imgs: [ [0, 3] ]
+    test_sar_imgs: [ [12, 43] ]
+    swin_params: *swin_params
+    override_train_params:
+      loss_fn: 
+        module: torch.nn.CrossEntropyLoss
+        params:
+          ignore_index: 2
+          weight: [0.2, 0.8, 0]
+
+  exp_59:
+    model: models.resunet.networks.ResUnetSAR # 
+    description: CNN SAR (2 Single images) [WBCE 0.1-0.9]
+    sumary: Model Trained and tested with 2 Single SAR images [WBCE 0.1-0.9]
+    short: SAR (2 Single Images) [WBCE 0.1-0.9]
+    group_model: CNN
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3] ]
+    train_sar_imgs: [ [12, 43] ]
+    test_opt_imgs: [ [0, 3] ]
+    test_sar_imgs: [ [12, 43] ]
+    resunet_depths: *resunet_depths
+    override_train_params:
+      loss_fn: 
+        module: torch.nn.CrossEntropyLoss
+        params:
+          ignore_index: 2
+          weight: [0.1, 0.9, 0]
+
+  exp_60:
+    model: models.swin.networks.SwinUnetSAR # 
+    description: SWIN-Unet SAR (2 Single images) [WBCE 0.1-0.9]
+    sumary: Model Trained and tested with 2 Single SAR images [WBCE 0.1-0.9]
+    short: SAR (2 Single Images) [WBCE 0.1-0.9]
+    group_model: SWIN-Unet
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3] ]
+    train_sar_imgs: [ [12, 43] ]
+    test_opt_imgs: [ [0, 3] ]
+    test_sar_imgs: [ [12, 43] ]
+    swin_params: *swin_params
+    override_train_params:
+      loss_fn: 
+        module: torch.nn.CrossEntropyLoss
+        params:
+          ignore_index: 2
+          weight: [0.1, 0.9, 0]
+
+
+  exp_61:
+    model: models.resunet.networks.ResUnetOpt # 
+    description: CNN Opt (Cloud-free) [WBCE 0.2-0.8 All classes]
+    sumary: Model Trained and tested with cloud-free optical images [WBCE 0.2-0.8 All classes]
+    short: Opt (Cloud-free) [WBCE 0.2-0.8 All classes]
+    group_model: CNN
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3] ]
+    train_sar_imgs: [ [0, 11] ]
+    test_opt_imgs: [ [0, 3] ]
+    test_sar_imgs: [ [0, 11] ]
+    resunet_depths: *resunet_depths
+    override_train_params:
+      loss_fn: 
+        module: torch.nn.CrossEntropyLoss
+        params:
+          weight: [0.2, 0.8, 0]
+
+  exp_62:
+    model: models.swin.networks.SwinUnetOpt # 
+    description: SWIN-Unet Opt (Cloud-free)  [WBCE 0.2-0.8 All classes]
+    sumary: Model Trained and tested with cloud-free optical images  [WBCE 0.2-0.8 All classes]
+    short: Opt (Cloud-free) [WBCE 0.2-0.8 All classes]
+    group_model: SWIN-Unet
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3] ]
+    train_sar_imgs: [ [0, 11] ]
+    test_opt_imgs: [ [0, 3] ]
+    test_sar_imgs: [ [0, 11] ]
+    swin_params: *swin_params
+    override_train_params:
+      loss_fn: 
+        module: torch.nn.CrossEntropyLoss
+        params:
+          weight: [0.2, 0.8, 0]
+
+  exp_63:
+    model: models.resunet.networks.ResUnetOpt # 
+    description: CNN Opt (Cloud-free) [Focal ignore class 2]
+    sumary: Model Trained and tested with cloud-free optical images [Focal ignore class 2]
+    short: Opt (Cloud-free) [Focal ignore class 2]
+    group_model: CNN
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3] ]
+    train_sar_imgs: [ [0, 11] ]
+    test_opt_imgs: [ [0, 3] ]
+    test_sar_imgs: [ [0, 11] ]
+    resunet_depths: *resunet_depths
+    override_train_params:
+      loss_fn: 
+        module: segmentation_models_pytorch.losses.FocalLoss
+        params:
+          mode: multiclass
+          gamma: 3
+          ignore_index: 2
+
+  exp_64:
+    model: models.swin.networks.SwinUnetOpt # 
+    description: SWIN-Unet Opt (Cloud-free) [Focal ignore class 2]
+    sumary: Model Trained and tested with cloud-free optical images [Focal ignore class 2]
+    short: Opt (Cloud-free) [Focal ignore class 2]
+    group_model: SWIN-Unet
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3] ]
+    train_sar_imgs: [ [0, 11] ]
+    test_opt_imgs: [ [0, 3] ]
+    test_sar_imgs: [ [0, 11] ]
+    swin_params: *swin_params
+    override_train_params:
+      loss_fn: 
+        module: segmentation_models_pytorch.losses.FocalLoss
+        params:
+          mode: multiclass
+          gamma: 3
+          ignore_index: 2
+
+
+  exp_71:
+    model: models.resunet.networks.ResUnetSAR # 
+    description: CNN SAR (2 Single images) [norm 128 Adam WBCE 0.2-0.8]
+    sumary: Model Trained and tested with 2 Single SAR images [norm 128 Adam WBCE 0.2-0.8]
+    short: SAR (2 Single Images) [norm 128 Adam WBCE 0.2-0.8]
+    group_model: CNN
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3] ]
+    train_sar_imgs: [ [12, 43] ]
+    test_opt_imgs: [ [0, 3] ]
+    test_sar_imgs: [ [12, 43] ]
+    resunet_depths: *resunet_depths
+    override_train_params:
+      loss_fn: 
+        module: torch.nn.CrossEntropyLoss
+        params:
+          ignore_index: 2
+          weight: [0.2, 0.8, 0]
+      optimizer:
+        module: torch.optim.Adam
+        params:
+          lr: 2.0e-5
+
+  exp_72:
+    model: models.swin.networks.SwinUnetSAR # 
+    description: SWIN-Unet SAR (2 Single images) [norm 128 Adam WBCE 0.2-0.8]
+    sumary: Model Trained and tested with 2 Single SAR images [norm 128 Adam WBCE 0.2-0.8]
+    short: SAR (2 Single Images) [norm 128 Adam WBCE 0.2-0.8]
+    group_model: SWIN-Unet
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3] ]
+    train_sar_imgs: [ [12, 43] ]
+    test_opt_imgs: [ [0, 3] ]
+    test_sar_imgs: [ [12, 43] ]
+    swin_params: *swin_params
+    override_train_params:
+      loss_fn: 
+        module: torch.nn.CrossEntropyLoss
+        params:
+          ignore_index: 2
+          weight: [0.2, 0.8, 0]
+      optimizer:
+        module: torch.optim.Adam
+        params:
+          lr: 2.0e-5
+
+  exp_73:
+    model: models.resunet.networks.ResUnetSAR # 
+    description: CNN SAR (2 Single images) [norm 128 WBCE 0.2-0.8]
+    sumary: Model Trained and tested with 2 Single SAR images [norm 128 WBCE 0.2-0.8]
+    short: SAR (2 Single Images) [norm 128 WBCE 0.2-0.8]
+    group_model: CNN
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3] ]
+    train_sar_imgs: [ [12, 43] ]
+    test_opt_imgs: [ [0, 3] ]
+    test_sar_imgs: [ [12, 43] ]
+    resunet_depths: *resunet_depths
+    override_train_params:
+      loss_fn: 
+        module: torch.nn.CrossEntropyLoss
+        params:
+          ignore_index: 2
+          weight: [0.2, 0.8, 0]
+
+  exp_74:
+    model: models.swin.networks.SwinUnetSAR # 
+    description: SWIN-Unet SAR (2 Single images) [norm 128 WBCE 0.2-0.8]
+    sumary: Model Trained and tested with 2 Single SAR images [norm 128 WBCE 0.2-0.8]
+    short: SAR (2 Single Images) [norm 128 WBCE 0.2-0.8]
+    group_model: SWIN-Unet
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3] ]
+    train_sar_imgs: [ [12, 43] ]
+    test_opt_imgs: [ [0, 3] ]
+    test_sar_imgs: [ [12, 43] ]
+    swin_params: *swin_params
+    override_train_params:
+      loss_fn: 
+        module: torch.nn.CrossEntropyLoss
+        params:
+          ignore_index: 2
+          weight: [0.2, 0.8, 0]
+
+
+
+  exp_75:
+    model: models.resunet.networks.ResUnetSAR # 
+    description: CNN SAR (2 Single images) [norm 128 Adam WBCE 0.2-0.8 all patches]
+    sumary: Model Trained and tested with 2 Single SAR images [norm 128 Adam WBCE 0.2-0.8 all patches]
+    short: SAR (2 Single Images) [norm 128 Adam WBCE 0.2-0.8 all patches]
+    group_model: CNN
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3] ]
+    train_sar_imgs: [ [12, 43] ]
+    test_opt_imgs: [ [0, 3] ]
+    test_sar_imgs: [ [12, 43] ]
+    resunet_depths: *resunet_depths
+    override_train_params:
+      loss_fn: 
+        module: torch.nn.CrossEntropyLoss
+        params:
+          ignore_index: 2
+          weight: [0.2, 0.8, 0]
+      optimizer:
+        module: torch.optim.Adam
+        params:
+          lr: 2.0e-5
+      max_train_batches: null
+      max_val_batches: null
+
+  exp_76:
+    model: models.swin.networks.SwinUnetSAR # 
+    description: SWIN-Unet SAR (2 Single images) [norm 128 Adam WBCE 0.2-0.8 all patches]
+    sumary: Model Trained and tested with 2 Single SAR images [norm 128 Adam WBCE 0.2-0.8 all patches]
+    short: SAR (2 Single Images) [norm 128 Adam WBCE 0.2-0.8 all patches]
+    group_model: SWIN-Unet
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3] ]
+    train_sar_imgs: [ [12, 43] ]
+    test_opt_imgs: [ [0, 3] ]
+    test_sar_imgs: [ [12, 43] ]
+    swin_params: *swin_params
+    override_train_params:
+      loss_fn: 
+        module: torch.nn.CrossEntropyLoss
+        params:
+          ignore_index: 2
+          weight: [0.2, 0.8, 0]
+      optimizer:
+        module: torch.optim.Adam
+        params:
+          lr: 2.0e-5
+      max_train_batches: null
+      max_val_batches: null
+
+  exp_77:
+    model: models.resunet.networks.ResUnetSAR # 
+    description: CNN SAR (2 Single images) [norm 128 WBCE 0.2-0.8 all patches]
+    sumary: Model Trained and tested with 2 Single SAR images [norm 128 WBCE 0.2-0.8 all patches]
+    short: SAR (2 Single Images) [norm 128 WBCE 0.2-0.8 all patches]
+    group_model: CNN
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3] ]
+    train_sar_imgs: [ [12, 43] ]
+    test_opt_imgs: [ [0, 3] ]
+    test_sar_imgs: [ [12, 43] ]
+    resunet_depths: *resunet_depths
+    override_train_params:
+      loss_fn: 
+        module: torch.nn.CrossEntropyLoss
+        params:
+          ignore_index: 2
+          weight: [0.2, 0.8, 0]
+      max_train_batches: null
+      max_val_batches: null
+
+  exp_78:
+    model: models.swin.networks.SwinUnetSAR # 
+    description: SWIN-Unet SAR (2 Single images) [norm 128 WBCE 0.2-0.8 all patches]
+    sumary: Model Trained and tested with 2 Single SAR images [norm 128 WBCE 0.2-0.8 all patches]
+    short: SAR (2 Single Images) [norm 128 WBCE 0.2-0.8 all patches]
+    group_model: SWIN-Unet
+    prefixs: *prefixs
+    opt_bands: *opt_bands
+    sar_bands: *sar_bands
+    n_classes: *n_classes
+    train_opt_imgs: [ [0, 3] ]
+    train_sar_imgs: [ [12, 43] ]
+    test_opt_imgs: [ [0, 3] ]
+    test_sar_imgs: [ [12, 43] ]
+    swin_params: *swin_params
+    override_train_params:
+      loss_fn: 
+        module: torch.nn.CrossEntropyLoss
+        params:
+          ignore_index: 2
+          weight: [0.2, 0.8, 0]
+      max_train_batches: null
+      max_val_batches: null

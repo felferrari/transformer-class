@@ -1,0 +1,24 @@
+paths_linux:
+  opt_data: /home/felferrari/projects/thesis/data/opt
+  sar_data: /home/felferrari/projects/thesis/data/sar
+  prodes_data: /home/felferrari/projects/thesis/data/prodes
+  tiles_path: /home/felferrari/projects/thesis/data/general/tiles.tif
+  experiments: /home/felferrari/projects/thesis/experiments
+  label_train: /home/felferrari/projects/thesis/data/general/label_train.tif
+  label_test: /home/felferrari/projects/thesis/data/general/label_test.tif
+  previous_train: /home/felferrari/projects/thesis/data/general/previous_train.tif
+  previous_test: /home/felferrari/projects/thesis/data/general/previous_test.tif
+  prepared_data: /home/felferrari/projects/thesis/prepared
+  results_sqlite: /home/felferrari/projects/thesis/experiments/results.db
+paths:
+  opt_data: D:\Ferrari\Projects\thesis\site_1\data\opt
+  sar_data: D:\Ferrari\Projects\thesis\site_1\data\sar
+  prodes_data: D:\Ferrari\Projects\thesis\prodes
+  tiles_path: D:\Ferrari\Projects\thesis\site_1\data\general\tiles.tif
+  experiments: D:\Ferrari\Projects\thesis\site_1\experiments
+  label_train: D:\Ferrari\Projects\thesis\site_1\data\general\label_train.tif
+  label_test: D:\Ferrari\Projects\thesis\site_1\data\general\label_test.tif
+  previous_train: D:\Ferrari\Projects\thesis\site_1\data\general\previous_train.tif
+  previous_test: D:\Ferrari\Projects\thesis\site_1\data\general\previous_test.tif
+  prepared_data: C:\Users\felferrari\Documents\projetos\thesis\prepared
+  results_sqlite: D:\Ferrari\Projects\thesis\site_1\experiments\results.db

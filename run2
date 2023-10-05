@@ -1,0 +1,24 @@
+#! /bin/bash
+python predict.py -d 1 -s 2 -e 31
+python evaluate.py -s 2 -e 31
+
+python predict.py -d 1 -s 2 -e 32
+python evaluate.py -s 2 -e 32
+
+python predict.py -d 1 -s 2 -e 33
+python evaluate.py -s 2 -e 33
+
+python predict.py -d 1 -s 2 -e 11
+python evaluate.py -s 2 -e 11
+
+python predict.py -d 1 -s 2 -e 12
+python evaluate.py -s 2 -e 12
+
+python predict.py -d 1 -s 2 -e 13
+python evaluate.py -s 2 -e 13
+
+python train.py -d 1 -s 2 -e 6 -m 5
+python train.py -d 1 -s 2 -e 6 -m 6
+python train.py -d 1 -s 2 -e 6 -m 7
+python predict.py -d 1 -s 2 -e 6
+python evaluate.py -s 2 -e 6

@@ -1,0 +1,9 @@
+#! /bin/bash
+python label-gen.py -s $1
+python previous-def-gen.py -s $1
+python tiles-gen.py -s $1
+python prepare-data.py -s $1 -r
+
+
+
+
